@@ -1,6 +1,8 @@
 from itertools import combinations, chain
 from collections import defaultdict
-from bisect import bisect
+import curses
+
+#screen = curses.initscr()
 
 nfloors = 4
 ntypes = 5
@@ -47,6 +49,27 @@ def neighbors(node):
                 nb.append(pos_nb)
     return nb
 
+def draw(current):
+    xoff = 2+8
+    yoff = 2 + nfloors * 2
+    spacing = 6
+    screen.clear()
+    screen.border(0)
+    elevator, chips, generators = current
+    screen.addstr(1, 42, 'Turn : %d' % gScore[current])
+    for i in range(nfloors):
+        screen.addstr(yoff-2*i, 2, 'Fl #%d' %i)
+    for j, k in enumerate(chips):
+        screen.addstr(yoff-2*k, xoff + j * spacing, 'M')
+    for j, k in enumerate(generators):
+        screen.addstr(yoff-2*i, xoff + j * spacing +1, 'G')
+    #screen.addstr(yoff - elevator * 2 + 1, (cursor/2 * spacing) + (cursor % 2) + xoff, '^')
+    screen.addstr(12,2, '')
+    #screen.addstr(13, 2, repr(selected) + " " + str(getElement(cursor)) + " " + str(exists()))
+    #screen.addstr(15, 2, repr(saved))
+    screen.refresh()
+    #screen.addstr()
+
 # part 1
 ntypes = 5
 startnode = (0, (0, 2, 2, 2, 2), (0, 1, 1, 1, 1))
@@ -65,26 +88,30 @@ gScore[startnode] = 0
 fScore[startnode] = distance(startnode)
 
 openSet = [startnode]
-openSetfScore = [distance(startnode)]
 done = []
 
 while len(openSet):
-    current = openSet.pop(0)
-    openSetfScore.pop(0)
+    current = openSet[0]
+    minfScore = fScore[current]
+    for node in openSet:
+        if fScore[node] < minfScore:
+            current = node
+            minfScore = fScore[node]
+
+    openSet.remove(current)
     done.append(current)
     if distance(current) == 0:
-        print gScore[current]
         break
     for nb in neighbors(current):
         if nb in done:
             continue
         done.append(nb)
         tmpgScore = gScore[current] + 1
-        tmpfScore = distance(nb)
-        index = bisect(openSetfScore, tmpfScore)
-        openSet.insert(index, nb)
-        openSetfScore.insert(index, tmpfScore)
+        openSet.append(nb)
         if tmpgScore < gScore[nb] or gScore[nb] == 0:
             gScore[nb] = tmpgScore
-            fScore[nb] = tmpgScore + tmpfScore
-    print current, fScore[current], gScore[current], openSetfScore
+            fScore[nb] = tmpgScore + distance(nb)
+    print current, fScore[current], gScore[current]
+    #draw(current)
+
+#curses.endwin()
