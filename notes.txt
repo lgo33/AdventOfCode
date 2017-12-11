@@ -1,0 +1,2 @@
+# push from a machine with differing git settings
+git push https://lgo33@github.com/lgo33/AdventOfCode.git master:master
